@@ -4,32 +4,34 @@
 #include "../headers/candidate_finder.h"
 
 int candidate_finder::get_genotype(vector<int> genotype) {
-    if(genotype.size() == 0){
+    if(genotype.size() == 0) {
         return -1;
     }
-    if(genotype.size() < 2){
+    else if(genotype.size() < 2) {
         return genotype[0];
     }
-    if(genotype.size() == 2) {
+    else if(genotype.size() == 2) {
         if(genotype[0] == 0 && genotype[1] == 0) return GENOTYPE_HOM;
-        if(genotype[0] == 0 && genotype[1] == 1) return GENOTYPE_HET;
-        if(genotype[0] == 1 && genotype[1] == 0) return GENOTYPE_HET;
-        if(genotype[0] == 0 && genotype[1] == 2) return GENOTYPE_HET;
-        if(genotype[0] == 2 && genotype[1] == 0) return GENOTYPE_HET;
-        if(genotype[0] == 1 && genotype[1] == 1) return GENOTYPE_HOMALT;
-        if(genotype[0] == 2 && genotype[1] == 2) return GENOTYPE_HOMALT;
-        if(genotype[0] == 1 && genotype[1] == 2) return GENOTYPE_HET;
-        if(genotype[0] == 2 && genotype[1] == 1) return GENOTYPE_HET;
+        else if(genotype[0] == 0 && genotype[1] == 1) return GENOTYPE_HET;
+        else if(genotype[0] == 1 && genotype[1] == 0) return GENOTYPE_HET;
+        else if(genotype[0] == 0 && genotype[1] == 2) return GENOTYPE_HET;
+        else if(genotype[0] == 2 && genotype[1] == 0) return GENOTYPE_HET;
+        else if(genotype[0] == 1 && genotype[1] == 1) return GENOTYPE_HOMALT;
+        else if(genotype[0] == 2 && genotype[1] == 2) return GENOTYPE_HOMALT;
+        else if(genotype[0] == 1 && genotype[1] == 2) return GENOTYPE_HET;
+        else if(genotype[0] == 2 && genotype[1] == 1) return GENOTYPE_HET;
         return -2;
     }
     return -3;
 }
+
 
 map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates(string bam_file_path,
                                                                                  string ref_file_path,
                                                                                  string chromosome,
                                                                                  long long start,
                                                                                  long long stop,
+                                                                                 map<long long, int> &insert_length_map,
                                                                                  string vcf_file_path,
                                                                                  bool label_candidates) {
     BAM_handler bam_file(bam_file_path);
@@ -68,8 +70,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
         int read_index = 0;
 
         // initialize a map of read candidates
-        map<int, type_candidate_allele> read_candidate_map;
-        map<int, type_candidate_allele>::iterator read_candidate_it;
+        map<long long, type_candidate_allele> read_candidate_map;
 
         for(int k = 0; k < alignment->core.n_cigar; k++) {
             int cigar_op = bam_cigar_op(cigar[k]);
@@ -81,7 +82,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                     if(read_pos >= start && read_pos <= stop) {
                         int ref_index = read_pos - start;
                         // get the read base
-                        if(seq_nt16_str[bam_seqi(seqi, read_index)] != reference_seq[ref_index]){
+                        if(seq_nt16_str[bam_seqi(seqi, read_index)] != reference_seq[ref_index]) {
                             type_candidate_allele candidate;
                             candidate.pos = read_pos;
                             candidate.allele = seq_nt16_str[bam_seqi(seqi, read_index)];
@@ -92,7 +93,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                     read_pos += 1;
                     read_index += 1;
                 }
-            }else if(cigar_op == BAM_CINS) {
+            } else if(cigar_op == BAM_CINS) {
                 // insert
                 long long anchor_position = read_pos - 1;
                 if(anchor_position >= start && anchor_position <= stop && read_index > 0) {
@@ -105,6 +106,12 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                     candidate.allele = insert_allele;
                     candidate.candidate_type = INSERT_TYPE;
                     read_candidate_map[anchor_position] = candidate;
+                }
+                if(read_index > 0) {
+                    if(insert_length_map.find(anchor_position) != insert_length_map.end())
+                        insert_length_map[anchor_position] = max(insert_length_map[anchor_position], cigar_len);
+                    else
+                        insert_length_map[anchor_position] = cigar_len;
                 }
                 read_index += cigar_len;
             } else if(cigar_op == BAM_CDEL) {
@@ -147,9 +154,8 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
             }
         }
 
-        for ( read_candidate_it = read_candidate_map.begin(); read_candidate_it != read_candidate_map.end();
-              read_candidate_it++ ) {
-            type_candidate_allele candidate = read_candidate_it->second;
+        for( const auto& read_candidate_it : read_candidate_map ) {
+            type_candidate_allele candidate = read_candidate_it.second;
             global_candidate_map[candidate] += 1;
         }
     }
@@ -178,12 +184,12 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
         if(positional_candidates[candidate.pos].size() < 2){
             int candidate_gt = GENOTYPE_HOM;
             bool is_labeled = false;
-            if(label_candidates){
+            if(label_candidates) {
                 is_labeled = true;
                 if(positional_variants[candidate.pos].size() > 0){
                     vector<type_vcf_record> vcf_records = positional_variants[candidate.pos];
                     // for each record in that position
-                    for(int i=0; i<vcf_records.size(); i++){
+                    for(int i=0; i<vcf_records.size(); i++) {
                         // if there's an alt allele
                         for(int j=0;j<vcf_records[i].alt_allele.size();j++) {
                             // that matches the candidate
@@ -191,15 +197,12 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                                vcf_records[i].alt_allele[j].alt_allele == candidate.allele &&
                                vcf_records[i].is_filter_pass){
                                 // then find the genotype
-                                candidate_gt = get_genotype(vcf_records[i].genotype);
-                                if(candidate_gt < 0){
+                                candidate_gt = this->get_genotype(vcf_records[i].genotype);
+                                if(candidate_gt < 0) {
                                     if(candidate_gt == -1){
                                         cerr<<"WARN: EMPTY GENOTYPE VECTOR."<<vcf_records[i].chromosome_name<<" ";
                                         cerr<<vcf_records[i].start_pos<<" "<<vcf_records[i].id<<endl;
-                                    } else if(candidate_gt == -2){
-                                        cerr<<"WARN: INVALID GENOTYPE FOUND."<<vcf_records[i].chromosome_name<<" ";
-                                        cerr<<vcf_records[i].start_pos<<" "<<vcf_records[i].id<<endl;
-                                    } else if(candidate_gt == -3){
+                                    } else {
                                         cerr<<"WARN: INVALID GENOTYPE FOUND."<<vcf_records[i].chromosome_name<<" ";
                                         cerr<<vcf_records[i].start_pos<<" "<<vcf_records[i].id<<endl;
                                     }

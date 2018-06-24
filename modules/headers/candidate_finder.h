@@ -11,8 +11,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <htslib/vcf.h>
-#include <htslib/tbx.h>
+#include <algorithm>
 #include "vcf_handler.h"
 #include "bam_handler.h"
 #include "fasta_handler.h"
@@ -51,6 +50,7 @@ class candidate_finder {
                                                                        string chromosome,
                                                                        long long start,
                                                                        long long stop,
+                                                                       map<long long, int> &insert_length_map,
                                                                        string vcf_file_path=string(),
                                                                        bool label_candidates=false);
         int get_genotype(vector<int> genotype);

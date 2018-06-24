@@ -94,6 +94,15 @@ vector<type_read> BAM_handler::get_reads(string chromosome, long long start, lon
     while(sam_itr_next(this->hts_file, iter, alignment) >= 0) {
         //get read flags
         type_read_flags read_flags = get_read_flags(alignment->core.flag);
+        if(read_flags.is_supplementary || read_flags.is_qc_failed || read_flags.is_duplicate || read_flags.is_secondary
+           || read_flags.is_unmapped){
+            continue;
+        }
+
+        // mapping quality
+        if(alignment->core.qual <= 0){
+            continue;
+        }
 
         // get query name
         string query_name = bam_get_qname(alignment);
