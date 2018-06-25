@@ -12,8 +12,9 @@ int main(int argc, char **argv)
     string ref_file_path = "/data/users/common/GIAB/ref/GRCh37_WG.fa";
     string vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/GRCh37_GIAB.vcf.gz";
     string chromosome_name = "19";
-    long long  start_pos = 5388390;
-    long long end_pos = 5388395;
+    long long  start = 5356142;
+    long long stop = 5356148;
+    bool is_train_mode = true;
 
 
     // Sample names
@@ -24,9 +25,29 @@ int main(int argc, char **argv)
     vector <type_sequence> chromosome_names;
     chromosome_names = bam_file.get_chromosome_sequence_names();*/
 
-    // get reference seq
-    image_generator image_generator_ob(bam_file_path, ref_file_path, vcf_file_path, true);
-    image_generator_ob.parse_candidates(chromosome_name, start_pos, end_pos);
+    // find the candidates (labeled or unlabeled)
+    candidate_finder candidate_finder_ob;
+    map<long long, vector<type_candidate_allele> > positional_candidates;
+    map<long long, int> insert_length_map;
+
+    positional_candidates = candidate_finder_ob.find_candidates(bam_file_path,
+                                                                ref_file_path,
+                                                                chromosome_name,
+                                                                start,
+                                                                stop,
+                                                                insert_length_map,
+                                                                vcf_file_path,
+                                                                true);
+
+    for( const auto& pos_info : positional_candidates ) {
+        long long pos = pos_info.first;
+        vector<type_candidate_allele> candidate_list = pos_info.second;
+        for(int i=0;i<candidate_list.size();i++) {
+            cout<<candidate_list[i].pos<<" "<<candidate_list[i].allele<<" "<<candidate_list[i].candidate_type<<endl;
+            image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path, candidate_list[i], insert_length_map);
+            image_generator_ob.generate_candidate_image();
+        }
+    }
     //cout<<reference_seq<<endl;
 
     /*for(int i=0; i<reads.size(); i++){

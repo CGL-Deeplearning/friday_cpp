@@ -70,7 +70,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
         int read_index = 0;
 
         // initialize a map of read candidates
-        map<long long, type_candidate_allele> read_candidate_map;
+        map<long long, vector<type_candidate_allele> > read_candidate_map;
 
         for(int k = 0; k < alignment->core.n_cigar; k++) {
             int cigar_op = bam_cigar_op(cigar[k]);
@@ -87,7 +87,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                             candidate.pos = read_pos;
                             candidate.allele = seq_nt16_str[bam_seqi(seqi, read_index)];
                             candidate.candidate_type = SNP_TYPE;
-                            read_candidate_map[read_pos] = candidate;
+                            read_candidate_map[read_pos].push_back(candidate);
                         }
                     }
                     read_pos += 1;
@@ -105,7 +105,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                     candidate.pos = anchor_position;
                     candidate.allele = insert_allele;
                     candidate.candidate_type = INSERT_TYPE;
-                    read_candidate_map[anchor_position] = candidate;
+                    read_candidate_map[anchor_position].push_back(candidate);
                 }
                 if(read_index > 0) {
                     if(insert_length_map.find(anchor_position) != insert_length_map.end())
@@ -130,7 +130,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                     candidate.allele = delete_allele;
                     candidate.candidate_type = DELETE_TYPE;
                     // cout<<"Delete: "<<read_pos<<" "<<delete_allele<<endl;
-                    read_candidate_map[anchor_position] = candidate;
+                    read_candidate_map[anchor_position].push_back(candidate);
                 }
                 read_pos += cigar_len;
             }else if(cigar_op == BAM_CREF_SKIP){
@@ -155,8 +155,10 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
         }
 
         for( const auto& read_candidate_it : read_candidate_map ) {
-            type_candidate_allele candidate = read_candidate_it.second;
-            global_candidate_map[candidate] += 1;
+            vector<type_candidate_allele> candidates = read_candidate_it.second;
+            for(int i=0; i < candidates.size(); i++) {
+                global_candidate_map[candidates[i]] += 1;
+            }
         }
     }
 

@@ -4,6 +4,20 @@
 
 #include "../headers/image_channels.h"
 
+char image_channels::get_decoded_base(double base_value){
+    if(base_value >= 245.0 && base_value <= 260.0)
+        return 'A';
+    if(base_value >= 95.0 && base_value <= 105.0)
+        return 'C';
+    if(base_value >= 175.0 && base_value <= 185.0)
+        return 'G';
+    if(base_value >= 25.0 && base_value <= 35.0)
+        return 'T';
+    if(base_value >= 4.0 && base_value <= 10.0)
+        return '*';
+    return ' ';
+}
+
 double image_channels::get_base_color(char base){
     if(base == 'A' || base == 'a')
         return 254.0;

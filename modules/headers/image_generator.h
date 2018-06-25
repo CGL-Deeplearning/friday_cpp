@@ -26,26 +26,51 @@ using namespace std;
 #define MATCH_CHANNEL 4
 #define CIGAR_CHANNEL 5
 #define SUPPORT_CHANNEL 6
+
+#define IMAGE_WIDTH 100
+#define IMAGE_HEIGHT 50
 #define TOTAL_CHANNELS 7
+
+
+struct type_base_info {
+    int base_quality;
+    char base;
+    bool is_match;
+    bool operator<(const type_base_info& r) const {
+        return base_quality < r.base_quality;
+    }
+};
+
 class image_generator {
     public:
-        image_generator(string bam_file_path,
+        image_generator(string chromosome_name,
+                        string bam_file_path,
                         string ref_file_path,
-                        string vcf_file_path=string(),
-                        bool train_mode=false);
+                        type_candidate_allele candidate,
+                        map<long long, int> insert_length_map);
 
-        void parse_candidates(string chromosome_name, long long start, long long stop);
-        void generate_candidate_image(string chromosome_name,
-                                      type_candidate_allele candidate,
-                                      map<long long, int> &insert_length_map,
-                                      const int image_width=300,
-                                      const int image_height=100);
+        void set_left_right_genomic_position();
+        void generate_candidate_image();
+        void print_decoded_image();
+        void set_reference_base(int row, int column, char base);
+        void set_read_base(int row, int column,
+                           char base, double base_qual,
+                           double map_qual, bool is_rev,
+                           bool is_match, bool is_support,
+                           int cigar_op);
         ~image_generator();
     private:
+        string chromosome_name;
         string bam_file_path;
         string ref_file_path;
-        string vcf_file_path;
-        bool is_train_mode;
+        type_candidate_allele candidate;
+        map<long long, int> insert_length_map;
+        uint8_t image_array[IMAGE_HEIGHT][IMAGE_WIDTH][TOTAL_CHANNELS];
+        int half_width;
+        long long left_genomic_pos;
+        long long right_genomic_pos;
+        int total_left_bases;
+        int total_right_bases;
 };
 
 #endif //FRIDAY_CPP_IMAGE_GENERATOR_H
