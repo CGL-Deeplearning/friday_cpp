@@ -1,7 +1,7 @@
 appname = friday
 CC=clang++
 
-LIBS=-lhts
+LIBS=-lhts -lhdf5
 
 SRC = $(shell find . -maxdepth 3 -name "*.cpp")
 OBJ = $(patsubst %.cpp, %.o, $(SRC))

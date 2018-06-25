@@ -16,6 +16,8 @@ using namespace std;
 class image_channels{
     public:
     char get_decoded_base(double base_value);
+    char get_decoded_support(double support_value);
+
     double get_base_color(char base);
     double get_base_quality_color(int qual);
     double get_map_quality_color(int qual);

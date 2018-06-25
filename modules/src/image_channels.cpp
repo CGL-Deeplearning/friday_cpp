@@ -18,6 +18,15 @@ char image_channels::get_decoded_base(double base_value){
     return ' ';
 }
 
+
+char image_channels::get_decoded_support(double support_value){
+    if(support_value >= 245.0 && support_value <= 260.0)
+        return '1';
+    if(support_value >= 45.0 && support_value <= 55.0)
+        return '0';
+    return ' ';
+}
+
 double image_channels::get_base_color(char base){
     if(base == 'A' || base == 'a')
         return 254.0;
@@ -66,7 +75,7 @@ double image_channels::get_cigar_color(int cigar_op){
 }
 
 double image_channels::get_support_color(bool is_supported){
-    if (is_supported)
+    if (! is_supported)
         return MAX_COLOR_VALUE * 0.2;
     else
         return MAX_COLOR_VALUE * 1.0;

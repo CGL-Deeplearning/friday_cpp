@@ -4,6 +4,7 @@
 #include <vector>
 #include "modules/headers/candidate_finder.h"
 #include "modules/headers/image_generator.h"
+#include "modules/headers/hdf5_handler.h"
 using namespace std;
 
 int main(int argc, char **argv)
@@ -46,6 +47,9 @@ int main(int argc, char **argv)
             cout<<candidate_list[i].pos<<" "<<candidate_list[i].allele<<" "<<candidate_list[i].candidate_type<<endl;
             image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path, candidate_list[i], insert_length_map);
             image_generator_ob.generate_candidate_image();
+            hdf5_handler image_saver;
+            image_saver.save_img_to_hdf5(image_generator_ob);
+            exit(0);
         }
     }
     //cout<<reference_seq<<endl;

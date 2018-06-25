@@ -13,7 +13,6 @@
 #include <vector>
 #include "candidate_finder.h"
 #include "image_channels.h"
-#include "H5Cpp.h"
 using namespace std;
 #define CIGAR_OP_MATCH 0
 #define CIGAR_OP_IN 1
@@ -59,13 +58,13 @@ class image_generator {
                            bool is_match, bool is_support,
                            int cigar_op);
         ~image_generator();
+        int image_array[IMAGE_HEIGHT][IMAGE_WIDTH][TOTAL_CHANNELS];
     private:
         string chromosome_name;
         string bam_file_path;
         string ref_file_path;
         type_candidate_allele candidate;
         map<long long, int> insert_length_map;
-        uint8_t image_array[IMAGE_HEIGHT][IMAGE_WIDTH][TOTAL_CHANNELS];
         int half_width;
         long long left_genomic_pos;
         long long right_genomic_pos;

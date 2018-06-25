@@ -11,15 +11,7 @@ void image_generator::set_left_right_genomic_position(){
     left_genomic_pos = candidate.pos - 1;
     total_left_bases = 0;
     while(total_left_bases < half_width){
-        if(insert_length_map.find(left_genomic_pos) != insert_length_map.end()) {
-            if (total_left_bases + insert_length_map[left_genomic_pos] <= half_width) {
-                total_left_bases += (insert_length_map[left_genomic_pos]);
-                left_genomic_pos -= 1;
-            } else {
-                left_genomic_pos += 1;
-                break;
-            }
-        } else if(total_left_bases + 1 <= half_width) {
+        if(total_left_bases + insert_length_map[left_genomic_pos] + 1 <= half_width) {
             total_left_bases += 1;
             left_genomic_pos -= 1;
         } else {
@@ -31,15 +23,7 @@ void image_generator::set_left_right_genomic_position(){
     right_genomic_pos = candidate.pos;
     total_right_bases = 0;
     while(total_right_bases < half_width){
-        if(insert_length_map.find(right_genomic_pos) != insert_length_map.end()) {
-            if (total_right_bases + insert_length_map[right_genomic_pos] <= half_width) {
-                total_right_bases += (insert_length_map[right_genomic_pos]);
-                right_genomic_pos += 1;
-            } else {
-                right_genomic_pos -= 1;
-                break;
-            }
-        } else if(total_right_bases + 1 <= half_width) {
+        if(total_right_bases + insert_length_map[right_genomic_pos] + 1 <= half_width) {
             total_right_bases += 1;
             right_genomic_pos += 1;
         } else {
@@ -84,6 +68,14 @@ void image_generator::print_decoded_image() {
         }
         cout<<endl;
     }
+
+    // support channel decoding
+    for(int i=0; i<IMAGE_HEIGHT; i++) {
+        for(int j=0; j<IMAGE_WIDTH; j++) {
+            cout<<get_channels.get_decoded_support(image_array[i][j][SUPPORT_CHANNEL]);
+        }
+        cout<<endl;
+    }
 }
 
 void image_generator::generate_candidate_image() {
@@ -98,9 +90,14 @@ void image_generator::generate_candidate_image() {
     FASTA_handler fasta_file(ref_file_path);
     string reference_seq = fasta_file.get_reference_sequence(chromosome_name, left_genomic_pos, right_genomic_pos);
 
+
     //reference string
+    map<long long, int> position_to_index_map;
     for(int i=0; i<reference_seq.size(); i++) {
-        this->set_reference_base(current_row, current_column, reference_seq[i]);
+        position_to_index_map[left_genomic_pos + i] = current_column;
+
+        set_reference_base(current_row, current_column, reference_seq[i]);
+
         current_column += 1;
         if(insert_length_map[this->left_genomic_pos+i] > 0){
             for(int l=0; l<insert_length_map[this->left_genomic_pos+i]; l++){
@@ -115,7 +112,7 @@ void image_generator::generate_candidate_image() {
     const int tid = bam_name2id(bam_file.header, chromosome_name.c_str());
 
     // get the iterator
-    hts_itr_t *iter  = sam_itr_queryi(bam_file.idx, tid, candidate.pos, candidate.pos+1);
+    hts_itr_t *iter  = sam_itr_queryi(bam_file.idx, tid, candidate.pos, candidate.pos + 1);
 
     // initialize an alignment
     bam1_t* alignment = bam_init1();
@@ -253,16 +250,15 @@ void image_generator::generate_candidate_image() {
         uint32_t len = alignment->core.l_qseq;
         long long read_alignment_pos = alignment->core.pos;
         long long read_alignment_end_pos = bam_endpos(alignment);
-        current_column = half_width - total_left_bases;
-        if(read_alignment_pos > left_genomic_pos)
-            current_column = current_column + (read_alignment_pos-left_genomic_pos);
 
         for(long long i=read_alignment_pos; i<read_alignment_end_pos; i++) {
-            if(i < left_genomic_pos) {
+            if(i < left_genomic_pos) continue;
+            if( i >= right_genomic_pos) break;
+
+            if(position_to_index_map.find(i) != position_to_index_map.end()) {
+                current_column = position_to_index_map[i];
+            } else{
                 continue;
-            }
-            if( i >= right_genomic_pos) {
-                break;
             }
             if(base_map.find(i) != base_map.end()) {
                 char base = base_map[i].base;
@@ -325,7 +321,7 @@ void image_generator::generate_candidate_image() {
 
     hts_itr_destroy(iter);
     bam_destroy1(alignment);
-    print_decoded_image();
+    // print_decoded_image();
 }
 
 image_generator::image_generator(string chromosome_name, string bam_file_path, string ref_file_path,
