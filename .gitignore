@@ -30,5 +30,8 @@
 *.exe
 *.out
 *.app
+*.DS_Store
+*.pyc
 
-dep/
+.idea/
+dep/hdf5-1.10.1
