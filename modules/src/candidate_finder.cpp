@@ -180,7 +180,7 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
     for( const auto& candidate_info : positional_top_candidates ) {
         type_candidate_allele candidate = candidate_info.first;
 
-        if(candidate.freq == 1 && candidate.candidate_type==SNP_TYPE) {
+        if(candidate.freq <= 1 && candidate.candidate_type==SNP_TYPE) {
             continue;
         }
         if(positional_candidates[candidate.pos].size() < 2){
@@ -211,7 +211,6 @@ map<long long, vector<type_candidate_allele> > candidate_finder::find_candidates
                                 }
                             }
                         }
-
                     }
                 }
             }

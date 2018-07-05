@@ -79,7 +79,8 @@ class BAM_handler {
         BAM_handler(string path);
 
         vector<type_read> get_reads(string region, long long start, long long stop);
-        vector<type_sequence> get_chromosome_sequence_names();
+        vector<string> get_chromosome_sequence_names();
+        vector<type_sequence> get_chromosome_sequence_names_with_length();
         set<string> get_sample_names();
         type_read_flags get_read_flags(int flag);
 

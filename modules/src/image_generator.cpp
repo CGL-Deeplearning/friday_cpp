@@ -33,6 +33,16 @@ void image_generator::set_left_right_genomic_position(){
     }
 }
 
+void image_generator::generate_combined_image(image_generator alt1, image_generator alt2) {
+    for(int i=0; i<IMAGE_HEIGHT; i++){
+        for(int j=0;j<IMAGE_WIDTH; j++) {
+            for(int k=0; k<TOTAL_CHANNELS; k++){
+                image_array[i][j][k] = max(alt1.image_array[i][j][k], alt2.image_array[i][j][k]);
+            }
+        }
+    }
+}
+
 void image_generator::set_reference_base(int row, int column, char base) {
     image_channels get_channels;
     image_array[row][column][BASE_CHANNEL] = get_channels.get_base_color(base);
@@ -331,6 +341,10 @@ image_generator::image_generator(string chromosome_name, string bam_file_path, s
     this->ref_file_path = ref_file_path;
     this->candidate = candidate;
     this->insert_length_map = insert_length_map;
+    memset(this->image_array, 0, sizeof(this->image_array));
+}
+
+image_generator::image_generator() {
     memset(this->image_array, 0, sizeof(this->image_array));
 }
 

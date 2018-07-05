@@ -66,7 +66,7 @@ type_read_flags BAM_handler::get_read_flags(int flag)
     return flags;
 }
 
-vector<type_sequence> BAM_handler::get_chromosome_sequence_names() {
+vector<type_sequence> BAM_handler::get_chromosome_sequence_names_with_length() {
 	// Get all the sequence names. These are the chromosome names from the bed header file.
 	vector<type_sequence> sequence_names;
 	int total_targets = this->header->n_targets;
@@ -78,6 +78,18 @@ vector<type_sequence> BAM_handler::get_chromosome_sequence_names() {
 	}
 
 	return sequence_names;
+}
+
+vector<string> BAM_handler::get_chromosome_sequence_names() {
+    // Get all the sequence names. These are the chromosome names from the bed header file.
+    vector<string> sequence_names;
+    int total_targets = this->header->n_targets;
+    for (int i=0; i < total_targets; i++){
+        string seq_name = this->header->target_name[i];
+        sequence_names.push_back(seq_name);
+    }
+
+    return sequence_names;
 }
 
 vector<type_read> BAM_handler::get_reads(string chromosome, long long start, long long stop) {

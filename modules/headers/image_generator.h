@@ -47,6 +47,7 @@ class image_generator {
                         string ref_file_path,
                         type_candidate_allele candidate,
                         map<long long, int> insert_length_map);
+        image_generator();
 
         void set_left_right_genomic_position();
         void generate_candidate_image();
@@ -57,6 +58,7 @@ class image_generator {
                            double map_qual, bool is_rev,
                            bool is_match, bool is_support,
                            int cigar_op);
+        void generate_combined_image(image_generator alt1, image_generator alt2);
         ~image_generator();
         int image_array[IMAGE_HEIGHT][IMAGE_WIDTH][TOTAL_CHANNELS];
     private:

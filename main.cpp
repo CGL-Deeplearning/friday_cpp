@@ -2,9 +2,9 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
-#include "modules/headers/candidate_finder.h"
-#include "modules/headers/image_generator.h"
-#include "modules/headers/hdf5_handler.h"
+#include "modules/headers/train_data_generator.h"
+#include "modules/headers/bed_handler.h"
+#include "tqdm.h"
 using namespace std;
 
 int main(int argc, char **argv)
@@ -12,12 +12,13 @@ int main(int argc, char **argv)
     string bam_file_path = "/data/users/common/GIAB/bam/chr19_GRCh37.bam";
     string ref_file_path = "/data/users/common/GIAB/ref/GRCh37_WG.fa";
     string vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/GRCh37_GIAB.vcf.gz";
-    string chromosome_name = "19";
-    long long  start = 5356142;
-    long long stop = 5356148;
-    bool is_train_mode = true;
+    string confident_bed_path = "/data/users/common/GIAB/confident_bed/GRCh37_confident/NA12878_GRCh37_confident.bed";
 
-
+    train_data_generator image_generator(bam_file_path,
+                                         ref_file_path,
+                                         vcf_file_path,
+                                         confident_bed_path);
+    image_generator.genome_level_processes();
     // Sample names
     /*set<string> sample_names;
     sample_names = bam_file.get_sample_names();
@@ -26,32 +27,45 @@ int main(int argc, char **argv)
     vector <type_sequence> chromosome_names;
     chromosome_names = bam_file.get_chromosome_sequence_names();*/
 
-    // find the candidates (labeled or unlabeled)
-    candidate_finder candidate_finder_ob;
-    map<long long, vector<type_candidate_allele> > positional_candidates;
-    map<long long, int> insert_length_map;
 
-    positional_candidates = candidate_finder_ob.find_candidates(bam_file_path,
-                                                                ref_file_path,
-                                                                chromosome_name,
-                                                                start,
-                                                                stop,
-                                                                insert_length_map,
-                                                                vcf_file_path,
-                                                                true);
+    /*for(int i=0; i<candidate_positions.size(); i++) {
+        long long pos = candidate_positions[i];
+        vector<type_candidate_allele> candidate_list = candidate_lists[i];
 
-    for( const auto& pos_info : positional_candidates ) {
-        long long pos = pos_info.first;
-        vector<type_candidate_allele> candidate_list = pos_info.second;
-        for(int i=0;i<candidate_list.size();i++) {
-            cout<<candidate_list[i].pos<<" "<<candidate_list[i].allele<<" "<<candidate_list[i].candidate_type<<endl;
-            image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path, candidate_list[i], insert_length_map);
+        vector<image_generator> generated_images;
+        for(int i=0; i< candidate_list.size(); i++) {
+            // candidate allele i
+            image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path,
+                                               candidate_list[i], insert_length_map);
             image_generator_ob.generate_candidate_image();
-            hdf5_handler image_saver;
-            image_saver.save_img_to_hdf5(image_generator_ob);
-            exit(0);
+
+            generated_images.push_back(image_generator_ob);
+
+            string output_file_name = output_directory + chromosome_name + "_" +
+                                      to_string(candidate_list[i].pos) + "_" + to_string(i) + ".h5";
+            hdf5_handler image_saver(output_file_name);
+            image_saver.save_img_to_hdf5(image_generator_ob.image_array);
+            image_saver.save_allele_info(chromosome_name, to_string(candidate_list[i].pos),
+                                         candidate_list[i].allele, to_string(candidate_list[i].candidate_type),
+                                         ".", "-1");
         }
-    }
+        if(candidate_list.size() == 2) {
+            image_generator ig;
+            ig.generate_combined_image(generated_images[0], generated_images[1]);
+
+            string output_file_name = output_directory + chromosome_name + "_" +
+                                      to_string(candidate_list[0].pos) + "_2" + ".h5";
+
+            hdf5_handler image_saver(output_file_name);
+            image_saver.save_img_to_hdf5(ig.image_array);
+            image_saver.save_allele_info(chromosome_name, to_string(candidate_list[0].pos),
+                                         candidate_list[0].allele, to_string(candidate_list[0].candidate_type),
+                                         candidate_list[1].allele, to_string(candidate_list[1].candidate_type));
+
+        }
+        progress_bar.progress(progress, total_candidates);
+        progress += 1;
+    }*/
     //cout<<reference_seq<<endl;
 
     /*for(int i=0; i<reads.size(); i++){
