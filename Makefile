@@ -12,7 +12,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 all: clean $(appname)
 
 $(appname): $(objects)
-	$(CC) -std=c++11 -I./dep/cpptqdm/ -I./dep/hdf5-1.10.2/build/hdf5/include/ -L./dep/hdf5-1.10.2/build/hdf5/lib/ -o $(appname) $^ $(LIBS) $(SRC) -fopenmp
+	$(CC) -std=c++11 -I./dep/htslib/ -I./dep/cpptqdm/ -I./dep/hdf5-1.10.2/build/hdf5/include/ -L./dep/htslib/ -L./dep/hdf5-1.10.2/build/hdf5/lib/ -o $(appname) $^ $(LIBS) $(SRC) -fopenmp
 
 .PHONY: clean
 
