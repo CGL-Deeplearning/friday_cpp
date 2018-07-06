@@ -35,3 +35,5 @@
 
 .idea/
 dep/hdf5-1.10.2
+dep/htslib-1.8
+outputs/
