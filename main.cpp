@@ -14,6 +14,17 @@ int main(int argc, char **argv)
     string vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/GRCh37_GIAB.vcf.gz";
     string confident_bed_path = "/data/users/common/GIAB/confident_bed/GRCh37_confident/NA12878_GRCh37_confident.bed";
 
+
+    bool is_JARVIS = 1;
+
+    if(is_JARVIS) {
+        bam_file_path = "/data/users/common/GIAB/bam/NA12878_GIAB_30x_GRCh37.sorted.bam";
+        string ref_file_path = "/data/users/common/GIAB/ref/GRCh37_WG.fa";
+        string vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/NA12878_GRCh37.vcf.gz";
+        string confident_bed_path = "/data/users/common/GIAB/confident_bed/GRCh37_confident/NA12878_GRCh37_confident.bed";
+    }
+
+
     train_data_generator image_generator(bam_file_path,
                                          ref_file_path,
                                          vcf_file_path,
