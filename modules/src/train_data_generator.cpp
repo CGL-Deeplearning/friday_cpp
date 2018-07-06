@@ -30,6 +30,7 @@ void train_data_generator::generate_labeled_images(string chromosome_name, long 
 
     vector<long long> candidate_positions;
     vector<vector <type_candidate_allele> > candidate_lists;
+
     for( const auto& pos_info : positional_candidates ) {
         if (pos_info.second.size() == 0) continue;
         candidate_positions.push_back(pos_info.first);
@@ -38,46 +39,50 @@ void train_data_generator::generate_labeled_images(string chromosome_name, long 
 
     string output_directory = "./outputs/";
 
+//    tqdm progress_bar;
+//    int progress = 0;
+//    int total_ite = candidate_positions.size();
+
     #pragma omp parallel for
     for(int j=0; j<candidate_positions.size(); j++) {
-        long long pos = candidate_positions[j];
-        vector<type_candidate_allele> candidate_list = candidate_lists[j];
-
         vector<image_generator> generated_images;
 
-        for(int i=0; i< candidate_list.size(); i++) {
+        #pragma omp parallel for
+        for(int i=0; i< candidate_lists[j].size(); i++) {
             // candidate allele i
             image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path,
-                                               candidate_list[i], insert_length_map);
+                                               candidate_lists[j][i], insert_length_map);
             image_generator_ob.generate_candidate_image();
 
             generated_images.push_back(image_generator_ob);
 
             string output_file_name = output_directory + chromosome_name + "_" +
-                                      to_string(candidate_list[i].pos) + "_" + to_string(i) + ".h5";
+                                      to_string(candidate_lists[j][i].pos) + "_" + to_string(i) + ".h5";
             #pragma omp critical
             {
                 hdf5_handler image_saver(output_file_name);
                 image_saver.save_img_to_hdf5(image_generator_ob.image_array);
-                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[i].pos),
-                                             candidate_list[i].allele, to_string(candidate_list[i].candidate_type),
+                image_saver.save_allele_info(chromosome_name, to_string(candidate_lists[j][i].pos),
+                                             candidate_lists[j][i].allele, to_string(candidate_lists[j][i].candidate_type),
                                              ".", "-1");
             }
         }
-        if(candidate_list.size() == 2) {
+        if(candidate_lists[j].size() == 2) {
             image_generator ig;
             ig.generate_combined_image(generated_images[0], generated_images[1]);
             string output_file_name = output_directory + chromosome_name + "_" +
-                                      to_string(candidate_list[0].pos) + "_2" + ".h5";
+                                      to_string(candidate_lists[j][0].pos) + "_2" + ".h5";
             #pragma omp critical
             {
                 hdf5_handler image_saver(output_file_name);
                 image_saver.save_img_to_hdf5(ig.image_array);
-                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[0].pos),
-                                             candidate_list[0].allele, to_string(candidate_list[0].candidate_type),
-                                             candidate_list[1].allele, to_string(candidate_list[1].candidate_type));
+                image_saver.save_allele_info(chromosome_name, to_string(candidate_lists[j][0].pos),
+                                             candidate_lists[j][0].allele, to_string(candidate_lists[j][0].candidate_type),
+                                             candidate_lists[j][1].allele, to_string(candidate_lists[j][1].candidate_type));
             }
         }
+//        progress += 1;
+//        progress_bar.progress(progress, total_ite);
     }
 }
 
@@ -100,28 +105,45 @@ void train_data_generator::genome_level_processes() {
             printf(ANSI_COLOR_YELLOW "WARN: BED SEQUENCE NOT FOUND IN BAM FILE %s\n" ANSI_COLOR_RESET,
                    bed_chromosome_name.c_str());
     }
-    printf(ANSI_COLOR_GREEN "INFO: TOTAL SEQUENCES FOUND %d\n" ANSI_COLOR_RESET, int(filtered_sequence_names.size()));
+    printf(ANSI_COLOR_BLUE "INFO: TOTAL SEQUENCES FOUND %d\n" ANSI_COLOR_RESET, int(filtered_sequence_names.size()));
+
+    vector<type_sequence> sequence_with_length;
+    sequence_with_length = bam_processor.get_chromosome_sequence_names_with_length();
+    map<string, long long> length_by_sequence;
+    for(int i=0; i < sequence_with_length.size(); i++) {
+        type_sequence seq = sequence_with_length[i];
+        length_by_sequence[seq.sequence_name] = seq.sequence_length;
+    }
 
     vector<string> sequences = {"19"};
 
+    long long each_segment_length = 20000;
+
     for(int i=0; i<sequences.size(); i++) {
         string chromosome_name = sequences[i];
-        vector<bed_interval> intervals = bed_processor.bed_interval_map[chromosome_name];
+        long long len = length_by_sequence[chromosome_name];
+        long long current_pos = 0;
+
+        vector<bed_interval> intervals;
+        while(current_pos < len) {
+            bed_interval in(current_pos, min(len, current_pos+each_segment_length));
+            current_pos += each_segment_length;
+
+            intervals.push_back(in);
+        }
 
         printf(ANSI_COLOR_GREEN "INFO: GENERATING IMAGES FROM %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
         tqdm progress_bar;
         int progress = 0;
         int total_ite = intervals.size();
-        #pragma omp parallel num_threads(80)
-        {
-            #pragma omp parallel for
-            for (int j = 0; j < total_ite; j++) {
-                generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
-
-                progress_bar.progress(progress, total_ite);
-                progress += 1;
-            }
+        total_ite = 10;
+        progress_bar.set_label(chromosome_name);
+        for (int j = 0; j < total_ite; j++) {
+            generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
+            progress_bar.progress(progress, total_ite);
+            progress += 1;
         }
+
         printf(ANSI_COLOR_BLUE "\nINFO: IMAGE GENERATION FINISHED %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
     }
 }
