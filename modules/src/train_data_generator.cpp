@@ -111,13 +111,15 @@ void train_data_generator::genome_level_processes() {
         tqdm progress_bar;
         int progress = 0;
         int total_ite = intervals.size();
+        #pragma omp parallel num_threads(80)
+        {
+            #pragma omp parallel for
+            for (int j = 0; j < total_ite; j++) {
+                generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
 
-        #pragma omp parallel for
-        for(int j=0; j<total_ite; j++) {
-            generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
-
-            progress_bar.progress(progress, total_ite);
-            progress += 1;
+                progress_bar.progress(progress, total_ite);
+                progress += 1;
+            }
         }
         printf(ANSI_COLOR_BLUE "\nINFO: IMAGE GENERATION FINISHED %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
     }
