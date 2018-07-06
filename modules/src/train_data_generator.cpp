@@ -43,6 +43,7 @@ void train_data_generator::generate_labeled_images(string chromosome_name, long 
         vector<type_candidate_allele> candidate_list = candidate_lists[j];
 
         vector<image_generator> generated_images;
+        #pragma omp parallel for
         for(int i=0; i< candidate_list.size(); i++) {
             // candidate allele i
             image_generator image_generator_ob(chromosome_name, bam_file_path, ref_file_path,
@@ -98,7 +99,7 @@ void train_data_generator::genome_level_processes() {
             printf(ANSI_COLOR_YELLOW "WARN: BED SEQUENCE NOT FOUND IN BAM FILE %s\n" ANSI_COLOR_RESET,
                    bed_chromosome_name.c_str());
     }
-    printf(ANSI_COLOR_GREEN "INFO: TOTAL SEQUENCES FOUND %d\n" ANSI_COLOR_RESET, filtered_sequence_names.size());
+    printf(ANSI_COLOR_GREEN "INFO: TOTAL SEQUENCES FOUND %d\n" ANSI_COLOR_RESET, int(filtered_sequence_names.size()));
 
     vector<string> sequences = {"19"};
 
@@ -109,7 +110,7 @@ void train_data_generator::genome_level_processes() {
         printf(ANSI_COLOR_GREEN "INFO: GENERATING IMAGES FROM %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
         tqdm progress_bar;
         int progress = 0;
-        int total_ite = 20;
+        int total_ite = intervals.size();
 
         #pragma omp parallel for
         for(int j=0; j<total_ite; j++) {
