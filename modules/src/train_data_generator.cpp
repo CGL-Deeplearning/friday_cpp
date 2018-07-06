@@ -54,28 +54,28 @@ void train_data_generator::generate_labeled_images(string chromosome_name, long 
 
             string output_file_name = output_directory + chromosome_name + "_" +
                                       to_string(candidate_list[i].pos) + "_" + to_string(i) + ".h5";
-            #pragma omp critical
-            {
-                hdf5_handler image_saver(output_file_name);
-                image_saver.save_img_to_hdf5(image_generator_ob.image_array);
-                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[i].pos),
-                                             candidate_list[i].allele, to_string(candidate_list[i].candidate_type),
-                                             ".", "-1");
-            }
+//            #pragma omp critical
+//            {
+//                hdf5_handler image_saver(output_file_name);
+//                image_saver.save_img_to_hdf5(image_generator_ob.image_array);
+//                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[i].pos),
+//                                             candidate_list[i].allele, to_string(candidate_list[i].candidate_type),
+//                                             ".", "-1");
+//            }
         }
         if(candidate_list.size() == 2) {
             image_generator ig;
             ig.generate_combined_image(generated_images[0], generated_images[1]);
             string output_file_name = output_directory + chromosome_name + "_" +
                                       to_string(candidate_list[0].pos) + "_2" + ".h5";
-            #pragma omp critical
-            {
-                hdf5_handler image_saver(output_file_name);
-                image_saver.save_img_to_hdf5(ig.image_array);
-                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[0].pos),
-                                             candidate_list[0].allele, to_string(candidate_list[0].candidate_type),
-                                             candidate_list[1].allele, to_string(candidate_list[1].candidate_type));
-            }
+//            #pragma omp critical
+//            {
+//                hdf5_handler image_saver(output_file_name);
+//                image_saver.save_img_to_hdf5(ig.image_array);
+//                image_saver.save_allele_info(chromosome_name, to_string(candidate_list[0].pos),
+//                                             candidate_list[0].allele, to_string(candidate_list[0].candidate_type),
+//                                             candidate_list[1].allele, to_string(candidate_list[1].candidate_type));
+//            }
         }
     }
 }
