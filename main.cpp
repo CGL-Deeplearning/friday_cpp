@@ -19,9 +19,9 @@ int main(int argc, char **argv)
 
     if(is_JARVIS) {
         bam_file_path = "/data/users/common/GIAB/bam/NA12878_GIAB_30x_GRCh37.sorted.bam";
-        string ref_file_path = "/data/users/common/GIAB/ref/GRCh37_WG.fa";
-        string vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/NA12878_GRCh37.vcf.gz";
-        string confident_bed_path = "/data/users/common/GIAB/confident_bed/GRCh37_confident/NA12878_GRCh37_confident.bed";
+        ref_file_path = "/data/users/common/GIAB/ref/GRCh37_WG.fa";
+        vcf_file_path = "/data/users/common/GIAB/vcf/GRCh37_vcf/NA12878_GRCh37.vcf.gz";
+        confident_bed_path = "/data/users/common/GIAB/confident_bed/GRCh37_confident/NA12878_GRCh37_confident.bed";
     }
 
 
