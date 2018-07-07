@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
+#include <thread>
 #include <algorithm>
 #include "candidate_finder.h"
 #include "bam_handler.h"

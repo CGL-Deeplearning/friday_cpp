@@ -116,14 +116,15 @@ void train_data_generator::genome_level_processes() {
     }
 
     vector<string> sequences = {"19"};
+    unsigned int available_threads = thread::hardware_concurrency();
 
-    long long each_segment_length = 2000000;
+    long long each_segment_length;
 
     for(int i=0; i<sequences.size(); i++) {
         string chromosome_name = sequences[i];
         long long len = length_by_sequence[chromosome_name];
         long long current_pos = 0;
-
+        each_segment_length = len / available_threads;
         vector<bed_interval> intervals;
         while(current_pos < len) {
             bed_interval in(current_pos, min(len, current_pos+each_segment_length));
@@ -136,12 +137,15 @@ void train_data_generator::genome_level_processes() {
         tqdm progress_bar;
         int progress = 0;
         int total_ite = intervals.size();
-        total_ite = 5;
+
         progress_bar.set_label(chromosome_name);
-        for (int j = 0; j < total_ite; j++) {
-            generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
-            progress_bar.progress(progress, total_ite);
-            progress += 1;
+        #pragma omp parallel for
+        {
+            for (int j = 0; j < total_ite; j++) {
+                progress_bar.progress(progress, total_ite);
+                progress += 1;
+                generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
+            }
         }
 
         printf(ANSI_COLOR_BLUE "\nINFO: IMAGE GENERATION FINISHED %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
