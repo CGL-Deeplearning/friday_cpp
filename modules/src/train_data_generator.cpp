@@ -139,14 +139,13 @@ void train_data_generator::genome_level_processes() {
         int total_ite = intervals.size();
 
         progress_bar.set_label(chromosome_name);
-        #pragma omp parallel
-        {
-            for (int j = 0; j < total_ite; j++) {
-                progress_bar.progress(progress, total_ite);
-                progress += 1;
-                generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
-            }
+
+        for (int j = 0; j < total_ite; j++) {
+            progress_bar.progress(progress, total_ite);
+            progress += 1;
+            generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
         }
+
 
         printf(ANSI_COLOR_BLUE "\nINFO: IMAGE GENERATION FINISHED %s\n" ANSI_COLOR_RESET, chromosome_name.c_str());
     }
