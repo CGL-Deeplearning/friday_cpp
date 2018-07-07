@@ -117,7 +117,7 @@ void train_data_generator::genome_level_processes() {
 
     vector<string> sequences = {"19"};
 
-    long long each_segment_length = 20000;
+    long long each_segment_length = 2000000;
 
     for(int i=0; i<sequences.size(); i++) {
         string chromosome_name = sequences[i];
@@ -136,7 +136,7 @@ void train_data_generator::genome_level_processes() {
         tqdm progress_bar;
         int progress = 0;
         int total_ite = intervals.size();
-        total_ite = 10;
+        total_ite = 5;
         progress_bar.set_label(chromosome_name);
         for (int j = 0; j < total_ite; j++) {
             generate_labeled_images(chromosome_name, intervals[j].start_pos, intervals[j].end_pos);
