@@ -1,5 +1,5 @@
 appname = friday.exe
-CC=g++
+CC=g++-8
 INC=-I./dep/htslib-1.8/include/ -I./dep/cpptqdm/ -I./dep/hdf5-1.10.2/build/hdf5/include/
 LIBS=-lhts -lhdf5 -fopenmp -L./dep/htslib-1.8/lib/ -L./dep/hdf5-1.10.2/build/hdf5/lib/
 
