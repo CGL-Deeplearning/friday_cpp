@@ -139,7 +139,7 @@ void train_data_generator::genome_level_processes() {
         int total_ite = intervals.size();
 
         progress_bar.set_label(chromosome_name);
-        #pragma omp parallel for
+        #pragma omp parallel
         {
             for (int j = 0; j < total_ite; j++) {
                 progress_bar.progress(progress, total_ite);
